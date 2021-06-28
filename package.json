@@ -1,0 +1,27 @@
+{
+  "name": "postcss-unit-processor",
+  "version": "1.0.0",
+  "description": "PostCSS plugin to process css unit.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hex-ci/postcss-unit-processor.git"
+  },
+  "keywords": [
+    "postcss",
+    "postcss-plugin",
+    "unit"
+  ],
+  "author": "Hex",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hex-ci/postcss-unit-processor/issues"
+  },
+  "homepage": "https://github.com/hex-ci/postcss-unit-processor#readme",
+  "peerDependencies": {
+    "postcss": "^8.0.0"
+  }
+}
