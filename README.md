@@ -14,26 +14,6 @@ $ npm install postcss postcss-unit-processor --save-dev
 
 Use the processor function provided by the user to process the CSS unit. The default processor function is not to do any processing.
 
-### Input/Output
-
-```css
-// input
-h1 {
-  margin: 0 0 20px;
-  font-size: 32px;
-  line-height: 1.2;
-  letter-spacing: 1px;
-}
-
-// output
-h1 {
-  margin: 0 0 20px;
-  font-size: 32px;
-  line-height: 1.2;
-  letter-spacing: 1px;
-}
-```
-
 ### Example
 
 ```js
