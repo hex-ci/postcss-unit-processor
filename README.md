@@ -114,3 +114,22 @@ gulp.task('css', function () {
     .pipe(gulp.dest('build/css'));
 });
 ```
+
+#### Input/Output
+
+```css
+// input
+h1 {
+  margin: 0 0 20px;
+  font-size: 32px;
+  line-height: 1.2;
+  letter-spacing: 1px;
+}
+// output
+h1 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  line-height: 1.2;
+  letter-spacing: 0.5px;
+}
+```
