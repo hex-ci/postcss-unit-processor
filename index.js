@@ -1,4 +1,4 @@
-const unitRegex = /"[^"]+"|'[^']+'|url\([^)]+\)|var\([^)]+\)|(\d*\.?\d+)(px|pt|pc|cm|mm|in|%|em|rem|ch|vh|vw|vmin|vmax|ex)/g;
+let unitRegex = /"[^"]+"|'[^']+'|url\([^)]+\)|var\([^)]+\)|(\d*\.?\d+)(px|pt|pc|cm|mm|in|%|em|rem|ch|vh|vw|vmin|vmax|ex)/g;
 
 const filterPropList = {
   exact: list => list.filter(m => m.match(/^[^*!]+$/)),
@@ -46,7 +46,8 @@ const defaults = {
   propList: ['*'],
   replace: true,
   mediaQuery: false,
-  exclude: /node_modules/i
+  exclude: /node_modules/i,
+  customUnitList: []
 };
 
 function createUnitReplace(processor, unitPrecision, root) {
@@ -147,12 +148,28 @@ function createPropListMatcher(propList) {
   };
 }
 
+function processUnitRegex(customUnitList) {
+  const unitList = ['px', 'pt', 'pc', 'cm', 'mm', 'in', '%', 'em', 'rem', 'ch', 'vh', 'vw', 'vmin', 'vmax', 'ex'];
+  for (const unit of customUnitList) {
+    if (!unitList.includes(unit)) {
+      unitList.push(unit);
+    }
+  }
+  const unitStr = unitList.join('|');
+  return new RegExp(`"[^"]+"|'[^']+'|url\\([^)]+\\)|var\\([^)]+\\)|(\\d*\\.?\\d+)(${unitStr})`, 'g');
+}
+
 module.exports = (options = {}) => {
   const opts = Object.assign({}, defaults, options);
   const satisfyPropList = createPropListMatcher(opts.propList);
   const exclude = opts.exclude;
+  const customUnitList = opts.customUnitList
   let isExcludeFile = false;
   let unitReplace;
+
+  if(Array.isArray(customUnitList) && customUnitList.length > 0) {
+    unitRegex = processUnitRegex(customUnitList)
+  }
 
   return {
     postcssPlugin: "postcss-unit-processor",
