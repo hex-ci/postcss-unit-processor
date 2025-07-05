@@ -85,6 +85,10 @@ Default:
     - If value is function, you can use exclude function to return a true and the file will be ignored.
         - the callback will pass the file path as  a parameter, it should returns a Boolean result.
         - `function (file) { return file.indexOf('exclude') !== -1; }`
+- `customUnitList` (Array) List of custom units to process in addition to default units.
+    - Values should be strings representing unit names (e.g., `['dp', 'rpx']`).
+    - Only non-empty strings containing letters and the percentage sign are accepted.
+    - Custom units are added to the default set of units like `px`, `rem`, `vw`, etc.
 
 ### Use with gulp-postcss and autoprefixer
 

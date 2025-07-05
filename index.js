@@ -1,4 +1,6 @@
-let unitRegex = /"[^"]+"|'[^']+'|url\([^)]+\)|var\([^)]+\)|(\d*\.?\d+)(px|pt|pc|cm|mm|in|%|em|rem|ch|vh|vw|vmin|vmax|ex)/g;
+const defaultUnits = [
+  'px', 'pt', 'pc', 'cm', 'mm', 'in', '%', 'em', 'rem', 'ch', 'vh', 'vw', 'vmin', 'vmax', 'ex'
+];
 
 const filterPropList = {
   exact: list => list.filter(m => m.match(/^[^*!]+$/)),
@@ -49,6 +51,30 @@ const defaults = {
   exclude: /node_modules/i,
   customUnitList: []
 };
+
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function createUnitRegex(customUnitList) {
+  let userUnits = Array.isArray(customUnitList)
+    ? customUnitList.filter(
+        (u) => typeof u === 'string' && u.trim() && /^[a-zA-Z%]+$/.test(u)
+      )
+    : [];
+  const unitSet = new Set(defaultUnits);
+
+  for (const u of userUnits) {
+    unitSet.add(u);
+  }
+
+  const unitStr = Array.from(unitSet).map(escapeRegExp).join('|');
+
+  return new RegExp(
+    `"[^"]+"|'[^']+'|url\\([^)]+\\)|var\\([^)]+\\)|(\\d*\\.?\\d+)(${unitStr})`,
+    'g'
+  );
+}
 
 function createUnitReplace(processor, unitPrecision, root) {
   return (node) => (m, $1, $2) => {
@@ -148,17 +174,6 @@ function createPropListMatcher(propList) {
   };
 }
 
-function processUnitRegex(customUnitList) {
-  const unitList = ['px', 'pt', 'pc', 'cm', 'mm', 'in', '%', 'em', 'rem', 'ch', 'vh', 'vw', 'vmin', 'vmax', 'ex'];
-  for (const unit of customUnitList) {
-    if (!unitList.includes(unit)) {
-      unitList.push(unit);
-    }
-  }
-  const unitStr = unitList.join('|');
-  return new RegExp(`"[^"]+"|'[^']+'|url\\([^)]+\\)|var\\([^)]+\\)|(\\d*\\.?\\d+)(${unitStr})`, 'g');
-}
-
 module.exports = (options = {}) => {
   const opts = Object.assign({}, defaults, options);
   const satisfyPropList = createPropListMatcher(opts.propList);
@@ -167,9 +182,7 @@ module.exports = (options = {}) => {
   let isExcludeFile = false;
   let unitReplace;
 
-  if(Array.isArray(customUnitList) && customUnitList.length > 0) {
-    unitRegex = processUnitRegex(customUnitList)
-  }
+  const unitRegex = createUnitRegex(customUnitList);
 
   return {
     postcssPlugin: "postcss-unit-processor",
