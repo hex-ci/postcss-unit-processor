@@ -123,7 +123,7 @@ function blacklistedSelector(blacklist, selector) {
       return selector.indexOf(regex) !== -1;
     }
 
-    return selector.match(regex);
+    return regex.test(selector);
   });
 }
 
@@ -192,6 +192,7 @@ module.exports = (options = {}) => {
 
       if (
         exclude &&
+        filePath &&
         ((type.isFunction(exclude) && exclude(filePath)) ||
           (type.isString(exclude) && filePath.indexOf(exclude) !== -1) ||
           filePath.match(exclude) !== null)
@@ -208,6 +209,8 @@ module.exports = (options = {}) => {
       if (isExcludeFile) {
         return;
       }
+
+      unitRegex.lastIndex = 0;
 
       if (
         !unitRegex.test(decl.value) ||
@@ -237,6 +240,8 @@ module.exports = (options = {}) => {
       if (isExcludeFile) {
         return;
       }
+
+      unitRegex.lastIndex = 0;
 
       if (opts.mediaQuery && atRule.name === "media") {
         if (atRule.__unitProcessorFinished === true || !unitRegex.test(atRule.params)) {
