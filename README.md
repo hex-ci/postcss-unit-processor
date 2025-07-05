@@ -50,7 +50,8 @@ Default:
   selectorBlackList: [],
   replace: true,
   mediaQuery: false,
-  exclude: /node_modules/i
+  exclude: /node_modules/i,
+  customUnitList: []
 }
 ```
 
