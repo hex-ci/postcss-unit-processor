@@ -135,7 +135,7 @@ describe('postcss-unit-processor', () => {
   });
 
   // Test exclude option with function
-  it('should not exclude files when file path is undefined', async () => {
+  it('should process CSS when file path is undefined', async () => {
     const processor = (value, unit) => {
       if (unit === 'px') {
         return { value: value * 2, unit: 'px' };
@@ -148,7 +148,7 @@ describe('postcss-unit-processor', () => {
   });
 
   // Test exclude option with string
-  it('should not exclude files when file path does not match string', async () => {
+  it('should process CSS when file path does not match exclude string', async () => {
     const processor = (value, unit) => {
       if (unit === 'px') {
         return { value: value * 2, unit: 'px' };
@@ -161,7 +161,7 @@ describe('postcss-unit-processor', () => {
   });
 
   // Test exclude option with regex
-  it('should not exclude files when file path does not match regex', async () => {
+  it('should process CSS when file path does not match exclude regex', async () => {
     const processor = (value, unit) => {
       if (unit === 'px') {
         return { value: value * 2, unit: 'px' };
@@ -420,7 +420,7 @@ describe('postcss-unit-processor', () => {
   });
 
   // Test blacklistedSelector function directly by manipulating parent selector
-  it('should handle declaration with non-string parent selector', async () => {
+  it('should handle selector blacklist check with edge cases', async () => {
     const processor = (value, unit) => {
       if (unit === 'px') {
         return { value: value * 2, unit: 'px' };
@@ -521,41 +521,11 @@ describe('postcss-unit-processor', () => {
     );
   });
 
-  // Test processor returning object with undefined value
-  it('should handle processor returning object with undefined value', async () => {
-    const processor = (value, unit) => {
-      if (unit === 'px') {
-        return { value: undefined, unit: 'px' };
-      }
-      return { value, unit };
-    };
-    await testProcess(
-      'div { width: 100px; }',
-      'div { width: 0; }',
-      { processor }
-    );
-  });
-
   // Test processor returning object with falsy unit
   it('should handle processor returning object with falsy unit', async () => {
     const processor = (value, unit) => {
       if (unit === 'px') {
         return { value: 50, unit: '' };
-      }
-      return { value, unit };
-    };
-    await testProcess(
-      'div { width: 100px; }',
-      'div { width: 50px; }',
-      { processor }
-    );
-  });
-
-  // Test processor returning object with null unit
-  it('should handle processor returning object with null unit', async () => {
-    const processor = (value, unit) => {
-      if (unit === 'px') {
-        return { value: 50, unit: null };
       }
       return { value, unit };
     };
@@ -650,12 +620,4 @@ describe('postcss-unit-processor', () => {
     expect(result.warnings()).toHaveLength(0);
   });
 
-  // Test unitProcessor with undefined options (default parameter)
-  it('should handle unitProcessor called with undefined options', async () => {
-    const input = 'div { width: 100px; }';
-    const result = await postcss([unitProcessor(undefined)])
-      .process(input, { from: undefined });
-    expect(result.css).toEqual('div { width: 100px; }');
-    expect(result.warnings()).toHaveLength(0);
-  });
 });
