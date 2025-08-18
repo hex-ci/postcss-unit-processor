@@ -38,6 +38,28 @@ fs.writeFile('main-new.css', processedCss, function (err) {
 });
 ```
 
+### unitList Examples
+
+```js
+// Only process rem units
+unitProcessor({
+  processor: (value, unit) => value,
+  unitList: ['rem']
+})
+
+// Process all units except rem
+unitProcessor({
+  processor: (value, unit) => value,
+  unitList: ['!rem']
+})
+
+// Process only rem and px units
+unitProcessor({
+  processor: (value, unit) => value,
+  unitList: ['rem', 'px']
+})
+```
+
 ### options
 
 Type: `Object | Null`
@@ -47,6 +69,7 @@ Default:
   processor: (value) => value,
   unitPrecision: 5,
   propList: ['*'],
+  unitList: ['*'],
   selectorBlackList: [],
   replace: true,
   mediaQuery: false,
@@ -65,6 +88,11 @@ Default:
         - If the Number is returned, the unit value is directly replaced, and the unit name remains unchanged.
         - If an object is returned, the `value` of the object replaces the value, and the `unit` replaces the name.
 - `unitPrecision` (Number) The decimal numbers to allow the processed units to grow to.
+- `unitList` (Array) The units that can be changed by the processor function.
+    - Values need to be exact matches.
+    - Use wildcard `*` to enable all units. Example: `['*']`
+    - Use `!` to not match a unit. Example: `['*', '!rem']`
+    - Combine multiple units: `['rem', 'px', 'vw']`
 - `propList` (Array) The properties that can be changed by the processor function.
     - Values need to be exact matches.
     - Use wildcard `*` to enable all properties. Example: `['*']`

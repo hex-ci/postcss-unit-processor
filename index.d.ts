@@ -53,6 +53,12 @@ declare namespace PostcssUnitProcessor {
      * @default []
      */
     customUnitList?: string[];
+
+    /**
+     * List of units to process. Supports wildcards and negation.
+     * @default ['*']
+     */
+    unitList?: string[];
   }
 }
 

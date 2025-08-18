@@ -49,14 +49,15 @@ const defaults = {
   replace: true,
   mediaQuery: false,
   exclude: /node_modules/i,
-  customUnitList: []
+  customUnitList: [],
+  unitList: ['*']
 };
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function createUnitRegex(customUnitList) {
+function createUnitRegex(customUnitList, unitList) {
   let userUnits = Array.isArray(customUnitList)
     ? customUnitList.filter(
         (u) => typeof u === 'string' && u.trim() && /^[a-zA-Z%]+$/.test(u)
@@ -68,7 +69,27 @@ function createUnitRegex(customUnitList) {
     unitSet.add(u);
   }
 
-  const unitStr = Array.from(unitSet).map(escapeRegExp).join('|');
+  // Filter units based on unitList if provided
+  let filteredUnits = Array.from(unitSet);
+  if (Array.isArray(unitList)) {
+    if (unitList.length === 0) {
+      // Empty unitList means no units should be processed
+      filteredUnits = [];
+    } else {
+      const satisfyUnitList = createUnitListMatcher(unitList);
+      filteredUnits = filteredUnits.filter(unit => satisfyUnitList(unit));
+    }
+  }
+
+  const unitStr = filteredUnits.map(escapeRegExp).join('|');
+
+  // If no units to process, create a regex that won't match any units
+  if (unitStr === '') {
+    return new RegExp(
+      `"[^"]+"|'[^']+'|url\\([^)]+\\)|var\\([^)]+\\)`,
+      'g'
+    );
+  }
 
   return new RegExp(
     `"[^"]+"|'[^']+'|url\\([^)]+\\)|var\\([^)]+\\)|(\\d*\\.?\\d+)(${unitStr})`,
@@ -102,7 +123,7 @@ function createUnitReplace(processor, unitPrecision, root) {
 
     const fixedVal = toFixed(newValue, unitPrecision);
 
-    return fixedVal === 0 ? "0" : fixedVal + newUnit;
+    return fixedVal + newUnit;
   };
 }
 
@@ -174,15 +195,63 @@ function createPropListMatcher(propList) {
   };
 }
 
+function createUnitListMatcher(unitList) {
+  const hasWild = unitList.indexOf("*") > -1;
+  const matchAll = hasWild && unitList.length === 1;
+  const lists = {
+    exact: filterPropList.exact(unitList),
+    contain: filterPropList.contain(unitList),
+    startWith: filterPropList.startWith(unitList),
+    endWith: filterPropList.endWith(unitList),
+    notExact: filterPropList.notExact(unitList),
+    notContain: filterPropList.notContain(unitList),
+    notStartWith: filterPropList.notStartWith(unitList),
+    notEndWith: filterPropList.notEndWith(unitList)
+  };
+
+  return unit => {
+    if (matchAll) {
+      return true;
+    }
+
+    return (
+      (hasWild ||
+        lists.exact.indexOf(unit) > -1 ||
+        lists.contain.some(function(m) {
+          return unit.indexOf(m) > -1;
+        }) ||
+        lists.startWith.some(function(m) {
+          return unit.indexOf(m) === 0;
+        }) ||
+        lists.endWith.some(function(m) {
+          return unit.indexOf(m) === unit.length - m.length;
+        })) &&
+      !(
+        lists.notExact.indexOf(unit) > -1 ||
+        lists.notContain.some(function(m) {
+          return unit.indexOf(m) > -1;
+        }) ||
+        lists.notStartWith.some(function(m) {
+          return unit.indexOf(m) === 0;
+        }) ||
+        lists.notEndWith.some(function(m) {
+          return unit.indexOf(m) === unit.length - m.length;
+        })
+      )
+    );
+  };
+}
+
 module.exports = (options = {}) => {
   const opts = Object.assign({}, defaults, options);
   const satisfyPropList = createPropListMatcher(opts.propList);
   const exclude = opts.exclude;
-  const customUnitList = opts.customUnitList
+  const customUnitList = opts.customUnitList;
+  const unitList = opts.unitList;
   let isExcludeFile = false;
   let unitReplace;
 
-  const unitRegex = createUnitRegex(customUnitList);
+  const unitRegex = createUnitRegex(customUnitList, unitList);
 
   return {
     postcssPlugin: "postcss-unit-processor",

@@ -516,7 +516,7 @@ describe('postcss-unit-processor', () => {
     };
     await testProcess(
       'div { width: 100px; }',
-      'div { width: 0; }',
+      'div { width: 0px; }',
       { processor }
     );
   });
@@ -561,7 +561,7 @@ describe('postcss-unit-processor', () => {
     };
     await testProcess(
       'div { width: 100px; }',
-      'div { width: 0; }',
+      'div { width: 0px; }',
       { processor }
     );
   });
@@ -576,7 +576,7 @@ describe('postcss-unit-processor', () => {
     };
     await testProcess(
       'div { width: 100px; }',
-      'div { width: 0; }',
+      'div { width: 0px; }',
       { processor }
     );
   });
@@ -591,7 +591,7 @@ describe('postcss-unit-processor', () => {
     };
     await testProcess(
       'div { width: 100px; }',
-      'div { width: 0; }',
+      'div { width: 0px; }',
       { processor }
     );
   });
@@ -618,6 +618,243 @@ describe('postcss-unit-processor', () => {
       .process(input, { from: undefined });
     expect(result.css).toEqual('div { width: 100px; }');
     expect(result.warnings()).toHaveLength(0);
+  });
+
+  // percentage units should be preserved in hsl functions
+  it('should preserve percentage units in hsl functions when value is 0', async () => {
+    const processor = (value, unit) => {
+      if (unit === '%' && value === 0) {
+        return 0; // Simulate a processor that returns 0 for 0% values
+      }
+      return value;
+    };
+    await testProcess(
+      ':root { --theme-secondary-hs: 0, 0%; --theme-secondary: hsl(0, 0%, 85%); }',
+      ':root { --theme-secondary-hs: 0, 0%; --theme-secondary: hsl(0, 0%, 85%); }',
+      { processor }
+    );
+  });
+
+  // percentage units should be preserved when processor returns 0
+  it('should preserve percentage units when processor returns 0', async () => {
+    const processor = (value, unit) => {
+      if (unit === '%' && value === 0) {
+        return 0; // Simulate a processor that returns 0 for 0% values
+      }
+      return value;
+    };
+    await testProcess(
+      'div { width: 0%; height: 100%; }',
+      'div { width: 0%; height: 100%; }',
+      { processor }
+    );
+  });
+
+  // Test unitList with exact match
+  it('should only process specified units when unitList is provided', async () => {
+    const processor = (value, unit) => {
+      if (unit === 'rem') {
+        return { value: value * 2, unit: 'rem' };
+      }
+      return { value, unit };
+    };
+    await testProcess(
+      'div { width: 100px; height: 50rem; margin: 20em; }',
+      'div { width: 100px; height: 100rem; margin: 20em; }',
+      { processor, unitList: ['rem'] }
+    );
+  });
+
+  // Test unitList with multiple units
+  it('should process multiple specified units when unitList contains multiple units', async () => {
+    const processor = (value, unit) => {
+      if (unit === 'rem' || unit === 'em') {
+        return { value: value * 2, unit: unit };
+      }
+      return { value, unit };
+    };
+    await testProcess(
+      'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; }',
+      'div { width: 100px; height: 100rem; margin: 40em; padding: 10pt; }',
+      { processor, unitList: ['rem', 'em'] }
+    );
+  });
+
+  // Test unitList with wildcard
+  it('should process all units when unitList contains wildcard', async () => {
+    const processor = (value, unit) => {
+      if (unit === 'px') {
+        return { value: value * 2, unit: 'px' };
+      }
+      return { value, unit };
+    };
+    await testProcess(
+      'div { width: 100px; height: 50rem; }',
+      'div { width: 200px; height: 50rem; }',
+      { processor, unitList: ['*'] }
+    );
+  });
+
+  // Test unitList with not exact pattern
+  it('should not process units when unitList contains negation pattern', async () => {
+    const processor = (value, unit) => {
+      return { value: value * 2, unit: unit };
+    };
+    await testProcess(
+      'div { width: 100px; height: 50rem; margin: 20em; }',
+      'div { width: 100px; height: 100rem; margin: 40em; }',
+      { processor, unitList: ['*', '!px'] }
+    );
+  });
+
+  // Test unitList with startWith pattern
+  it('should process units starting with specified string', async () => {
+    const processor = (value, unit) => {
+      return { value: value * 2, unit: unit };
+    };
+    await testProcess(
+      'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; }',
+      'div { width: 200px; height: 50rem; margin: 20em; padding: 20pt; }',
+      { processor, unitList: ['p*'] }
+    );
+  });
+
+  // Test unitList with endWith pattern
+  it('should process units ending with specified string', async () => {
+    const processor = (value, unit) => {
+      return { value: value * 2, unit: unit };
+    };
+    await testProcess(
+      'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; }',
+      'div { width: 100px; height: 100rem; margin: 40em; padding: 10pt; }',
+      { processor, unitList: ['*m'] }
+    );
+  });
+
+  // Test unitList with contain pattern
+  it('should process units containing specified string', async () => {
+    const processor = (value, unit) => {
+      return { value: value * 2, unit: unit };
+    };
+    await testProcess(
+      'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; }',
+      'div { width: 100px; height: 100rem; margin: 40em; padding: 10pt; }',
+      { processor, unitList: ['*e*'] }
+    );
+  });
+
+  // Test unitList with notContain pattern
+  it('should not process units containing blacklisted string', async () => {
+    const processor = (value, unit) => {
+      return { value: value * 2, unit: unit };
+    };
+    await testProcess(
+      'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; }',
+      'div { width: 200px; height: 50rem; margin: 20em; padding: 20pt; }',
+      { processor, unitList: ['*', '!*e*'] }
+    );
+  });
+
+  // Test unitList with notStartWith pattern
+  it('should not process units starting with blacklisted string', async () => {
+    const processor = (value, unit) => {
+      return { value: value * 2, unit: unit };
+    };
+    await testProcess(
+      'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; }',
+      'div { width: 100px; height: 100rem; margin: 40em; padding: 10pt; }',
+      { processor, unitList: ['*', '!p*'] }
+    );
+  });
+
+  // Test unitList with notEndWith pattern
+  it('should not process units ending with blacklisted string', async () => {
+    const processor = (value, unit) => {
+      return { value: value * 2, unit: unit };
+    };
+    await testProcess(
+      'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; }',
+      'div { width: 200px; height: 50rem; margin: 20em; padding: 20pt; }',
+      { processor, unitList: ['*', '!*m'] }
+    );
+  });
+
+  // Test unitList with custom units
+  it('should process custom units when included in unitList', async () => {
+    const processor = (value, unit) => {
+      if (unit === 'custom') {
+        return { value: value * 2, unit: 'custom' };
+      }
+      return { value, unit };
+    };
+    await testProcess(
+      'div { width: 100custom; height: 50px; }',
+      'div { width: 200custom; height: 50px; }',
+      { processor, customUnitList: ['custom'], unitList: ['custom'] }
+    );
+  });
+
+  // Test unitList with mixed patterns
+  it('should handle mixed patterns in unitList', async () => {
+    const processor = (value, unit) => {
+      return { value: value * 2, unit: unit };
+    };
+    await testProcess(
+      'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; font-size: 14vw; }',
+      'div { width: 200px; height: 50rem; margin: 40em; padding: 10pt; font-size: 28vw; }',
+      { processor, unitList: ['px', 'em', 'vw'] }
+    );
+  });
+
+  // Test unitList default behavior (backward compatibility)
+  it('should process all units by default for backward compatibility', async () => {
+    const processor = (value, unit) => {
+      return { value: value * 2, unit: unit };
+    };
+    await testProcess(
+      'div { width: 100px; height: 50rem; }',
+      'div { width: 200px; height: 100rem; }',
+      { processor }
+    );
+  });
+
+  // Test unitList with empty array
+  it('should not process any units when unitList is empty array', async () => {
+    const processor = (value, unit) => {
+      return { value: value * 2, unit: unit };
+    };
+    await testProcess(
+      'div { width: 100px; height: 50rem; }',
+      'div { width: 100px; height: 50rem; }',
+      { processor, unitList: [] }
+    );
+  });
+
+  // Test unitList with media queries
+  it('should apply unitList filtering to media queries when enabled', async () => {
+    const processor = (value, unit) => {
+      if (unit === 'rem') {
+        return { value: value * 2, unit: 'rem' };
+      }
+      return { value, unit };
+    };
+    await testProcess(
+      '@media (max-width: 600px) { div { width: 100rem; height: 50px; } }',
+      '@media (max-width: 600px) { div { width: 200rem; height: 50px; } }',
+      { processor, unitList: ['rem'], mediaQuery: true }
+    );
+  });
+
+  // Test unitList with non-array value (should fallback to default behavior)
+  it('should handle non-array unitList', async () => {
+    const processor = (value, unit) => {
+      return { value: value * 2, unit: unit };
+    };
+    await testProcess(
+      'div { width: 100px; height: 50rem; }',
+      'div { width: 200px; height: 100rem; }',
+      { processor, unitList: 'not-an-array' }
+    );
   });
 
 });
