@@ -1,6 +1,6 @@
 # postcss-unit-processor
 
-[![npm version](https://badgen.net/npm/v/postcss-unit-processor)](https://www.npmjs.com/package/postcss-unit-processor) [![codecov](https://codecov.io/github/hex-ci/postcss-unit-processor/graph/badge.svg?token=YKJBZI9LGK)](https://codecov.io/github/hex-ci/postcss-unit-processor)
+[![npm version](https://badgen.net/npm/v/postcss-unit-processor)](https://www.npmjs.com/package/postcss-unit-processor) [![codecov](https://codecov.io/github/hex-ci/postcss-unit-processor/graph/badge.svg?token=YKJBZI9LGK)](https://codecov.io/github/hex-ci/postcss-unit-processor) [![Downloads](https://badgen.net/npm/dt/postcss-unit-processor)](https://www.npmjs.com/package/postcss-unit-processor)
 
 PostCSS plugin to process css unit.
 
