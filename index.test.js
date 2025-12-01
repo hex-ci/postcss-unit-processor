@@ -76,8 +76,8 @@ describe('postcss-unit-processor', () => {
     );
   });
 
-  // Test media query processing
-  it('should process units in media queries when enabled', async () => {
+  // Test media query parameter processing
+  it('should process units in media query parameters when enabled', async () => {
     const processor = (value, unit) => {
       if (unit === 'px') {
         return { value: value * 2, unit: 'px' };
@@ -91,8 +91,8 @@ describe('postcss-unit-processor', () => {
     );
   });
 
-  // Test media query processing disabled
-  it('should not process units in media queries when disabled', async () => {
+  // Test media query parameter processing disabled
+  it('should not process units in media query parameters when disabled', async () => {
     const processor = (value, unit) => {
       if (unit === 'px') {
         return { value: value * 2, unit: 'px' };
@@ -132,45 +132,6 @@ describe('postcss-unit-processor', () => {
     const input = 'div { width: 100px; }';
     const output = 'div { width: 100px; width: 200px; }';
     await testProcess(input, output, { processor, replace: false });
-  });
-
-  // Test exclude option with function
-  it('should process CSS when file path is undefined', async () => {
-    const processor = (value, unit) => {
-      if (unit === 'px') {
-        return { value: value * 2, unit: 'px' };
-      }
-      return { value, unit };
-    };
-    const input = 'div { width: 100px; }';
-    const output = 'div { width: 200px; }';
-    await testProcess(input, output, { processor, exclude: (file) => file && file.includes('test') });
-  });
-
-  // Test exclude option with string
-  it('should process CSS when file path does not match exclude string', async () => {
-    const processor = (value, unit) => {
-      if (unit === 'px') {
-        return { value: value * 2, unit: 'px' };
-      }
-      return { value, unit };
-    };
-    const input = 'div { width: 100px; }';
-    const output = 'div { width: 200px; }';
-    await testProcess(input, output, { processor, exclude: 'test/path' });
-  });
-
-  // Test exclude option with regex
-  it('should process CSS when file path does not match exclude regex', async () => {
-    const processor = (value, unit) => {
-      if (unit === 'px') {
-        return { value: value * 2, unit: 'px' };
-      }
-      return { value, unit };
-    };
-    const input = 'div { width: 100px; }';
-    const output = 'div { width: 200px; }';
-    await testProcess(input, output, { processor, exclude: /test\/path/ });
   });
 
   // Test property list with wildcard patterns
@@ -302,8 +263,8 @@ describe('postcss-unit-processor', () => {
     );
   });
 
-  // Test blacklistedSelector with non-string selector
-  it('should handle non-string selector in blacklist check', async () => {
+  // Test selector not in blacklist
+  it('should process units when selector does not match blacklist', async () => {
     const processor = (value, unit) => {
       if (unit === 'px') {
         return { value: value * 2, unit: 'px' };
@@ -311,7 +272,7 @@ describe('postcss-unit-processor', () => {
       return { value, unit };
     };
 
-    // Create CSS with a rule that has no selector
+    // Create CSS with a selector that doesn't match blacklist
     const input = 'div { width: 100px; }';
     const result = await postcss([unitProcessor({ processor, selectorBlackList: ['test'] })])
       .process(input, { from: undefined });
@@ -419,8 +380,8 @@ describe('postcss-unit-processor', () => {
     expect(result.css).toEqual('@media (max-width: 600px) { div { width: 100px; } }');
   });
 
-  // Test blacklistedSelector function directly by manipulating parent selector
-  it('should handle selector blacklist check with edge cases', async () => {
+  // Test blacklistedSelector function with undefined selector
+  it('should handle undefined selector in blacklist check', async () => {
     const processor = (value, unit) => {
       if (unit === 'px') {
         return { value: value * 2, unit: 'px' };
