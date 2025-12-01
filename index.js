@@ -26,18 +26,19 @@ const typeToString = s =>
     .toLowerCase();
 
 const types = [
-  "String",
-  "Array",
-  "Undefined",
-  "Boolean",
-  "Number",
-  "Function",
-  "Symbol",
-  "Object"
+  'String',
+  'Array',
+  'Undefined',
+  'Boolean',
+  'Number',
+  'Function',
+  'Symbol',
+  'Object',
+  'RegExp'
 ];
 
 const type = types.reduce((acc, str) => {
-  acc["is" + str] = val => typeToString(val) === str.toLowerCase();
+  acc['is' + str] = val => typeToString(val) === str.toLowerCase();
   return acc;
 }, {});
 
@@ -75,7 +76,8 @@ function createUnitRegex(customUnitList, unitList) {
     if (unitList.length === 0) {
       // Empty unitList means no units should be processed
       filteredUnits = [];
-    } else {
+    }
+    else {
       const satisfyUnitList = createUnitListMatcher(unitList);
       filteredUnits = filteredUnits.filter(unit => satisfyUnitList(unit));
     }
@@ -135,12 +137,12 @@ function toFixed(number, precision) {
 }
 
 function blacklistedSelector(blacklist, selector) {
-  if (typeof selector !== "string") {
+  if (typeof selector !== 'string') {
     return;
   }
 
   return blacklist.some(regex => {
-    if (typeof regex === "string") {
+    if (typeof regex === 'string') {
       return selector.indexOf(regex) !== -1;
     }
 
@@ -149,7 +151,7 @@ function blacklistedSelector(blacklist, selector) {
 }
 
 function createPropListMatcher(propList) {
-  const hasWild = propList.indexOf("*") > -1;
+  const hasWild = propList.indexOf('*') > -1;
   const matchAll = hasWild && propList.length === 1;
   const lists = {
     exact: filterPropList.exact(propList),
@@ -196,7 +198,7 @@ function createPropListMatcher(propList) {
 }
 
 function createUnitListMatcher(unitList) {
-  const hasWild = unitList.indexOf("*") > -1;
+  const hasWild = unitList.indexOf('*') > -1;
   const matchAll = hasWild && unitList.length === 1;
   const lists = {
     exact: filterPropList.exact(unitList),
@@ -254,7 +256,7 @@ module.exports = (options = {}) => {
   const unitRegex = createUnitRegex(customUnitList, unitList);
 
   return {
-    postcssPlugin: "postcss-unit-processor",
+    postcssPlugin: 'postcss-unit-processor',
 
     Once(css) {
       const filePath = css.source.input.file;
@@ -263,11 +265,12 @@ module.exports = (options = {}) => {
         exclude &&
         filePath &&
         ((type.isFunction(exclude) && exclude(filePath)) ||
-          (type.isString(exclude) && filePath.indexOf(exclude) !== -1) ||
-          filePath.match(exclude) !== null)
+         (type.isString(exclude) && filePath.indexOf(exclude) !== -1) ||
+         (type.isRegExp(exclude) && filePath.match(exclude) !== null))
       ) {
         isExcludeFile = true;
-      } else {
+      }
+      else {
         isExcludeFile = false;
       }
 
@@ -312,7 +315,7 @@ module.exports = (options = {}) => {
 
       unitRegex.lastIndex = 0;
 
-      if (opts.mediaQuery && atRule.name === "media") {
+      if (opts.mediaQuery && atRule.name === 'media') {
         if (atRule.__unitProcessorFinished === true || !unitRegex.test(atRule.params)) {
           return;
         }

@@ -335,6 +335,23 @@ describe('postcss-unit-processor', () => {
     );
   });
 
+  // Test exclude option with function that returns false
+  it('should exclude files when exclude function returns false', async () => {
+    const processor = (value, unit) => {
+      if (unit === 'px') {
+        return { value: value * 2, unit: 'px' };
+      }
+      return { value, unit };
+    };
+
+    await testProcess(
+      'div { width: 100px; }',
+      'div { width: 200px; }',
+      { processor, exclude: () => '(' !== '(' },
+      { from: 'test.css' }
+    );
+  });
+
   // Test exclude option with string that matches file path
   it('should exclude files when file path contains exclude string', async () => {
     const processor = (value, unit) => {
