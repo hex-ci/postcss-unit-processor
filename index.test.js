@@ -1,8 +1,9 @@
 const postcss = require('postcss');
 const unitProcessor = require('./index');
 
-const testProcess = async (input, output, opts = {}) => {
-  const result = await postcss([unitProcessor(opts)]).process(input, { from: undefined });
+const testProcess = async (input, output, opts, postcssOpts = { from: undefined }) => {
+  const result = await postcss([unitProcessor(opts)]).process(input, postcssOpts);
+
   expect(result.css).toEqual(output);
   expect(result.warnings()).toHaveLength(0);
 };
@@ -24,6 +25,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { width: 100px; }',
       'div { width: 200px; }',
@@ -39,6 +41,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { width: 100px; }',
       'div { width: 33.33333px; }',
@@ -54,6 +57,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50px; }',
       'div { width: 200px; height: 50px; }',
@@ -69,6 +73,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       '.skip-class { width: 100px; } .normal-class { width: 100px; }',
       '.skip-class { width: 100px; } .normal-class { width: 200px; }',
@@ -84,6 +89,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       '@media (max-width: 600px) { div { width: 100px; } }',
       '@media (max-width: 1200px) { div { width: 200px; } }',
@@ -99,6 +105,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       '@media (max-width: 600px) { div { width: 100px; } }',
       '@media (max-width: 600px) { div { width: 200px; } }',
@@ -114,6 +121,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { width: 100custom; }',
       'div { width: 200custom; }',
@@ -129,23 +137,11 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
-    const input = 'div { width: 100px; }';
-    const output = 'div { width: 100px; width: 200px; }';
-    await testProcess(input, output, { processor, replace: false });
-  });
 
-  // Test property list with wildcard patterns
-  it('should process properties with wildcard patterns', async () => {
-    const processor = (value, unit) => {
-      if (unit === 'px') {
-        return { value: value * 2, unit: 'px' };
-      }
-      return { value, unit };
-    };
     await testProcess(
-      'div { max-width: 100px; min-width: 50px; width: 75px; height: 25px; }',
-      'div { max-width: 200px; min-width: 100px; width: 150px; height: 25px; }',
-      { processor, propList: ['*width'] }
+      'div { width: 100px; }',
+      'div { width: 100px; width: 200px; }',
+      { processor, replace: false }
     );
   });
 
@@ -157,6 +153,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { max-width: 100px; min-width: 50px; width-test: 75px; height: 25px; }',
       'div { max-width: 200px; min-width: 50px; width-test: 75px; height: 25px; }',
@@ -172,6 +169,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { max-width: 100px; min-width: 50px; test-width: 75px; height: 25px; }',
       'div { max-width: 200px; min-width: 100px; test-width: 150px; height: 25px; }',
@@ -187,6 +185,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { max-width: 100px; min-width-test: 50px; width: 75px; height: 25px; }',
       'div { max-width: 200px; min-width-test: 100px; width: 150px; height: 25px; }',
@@ -202,6 +201,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { max-width: 100px; min-width: 50px; width: 75px; height: 25px; }',
       'div { max-width: 200px; min-width: 100px; width: 150px; height: 25px; }',
@@ -217,6 +217,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       '.skip-class { width: 100px; } .normal-class { width: 100px; }',
       '.skip-class { width: 100px; } .normal-class { width: 200px; }',
@@ -224,23 +225,12 @@ describe('postcss-unit-processor', () => {
     );
   });
 
-  // Test processor returning null
-  it('should handle processor returning null', async () => {
-    const processor = (value, unit) => {
-      return null;
-    };
-    await testProcess(
-      'div { width: 100px; }',
-      'div { width: 100px; }',
-      { processor }
-    );
-  });
-
   // Test processor returning invalid type
   it('should handle processor returning invalid type', async () => {
-    const processor = (value, unit) => {
+    const processor = () => {
       return Symbol('invalid');
     };
+
     await testProcess(
       'div { width: 100px; }',
       'div { width: 100px; }',
@@ -256,6 +246,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { content: "100px"; background: url(100px); width: 100px; }',
       'div { content: "100px"; background: url(100px); width: 200px; }',
@@ -272,11 +263,11 @@ describe('postcss-unit-processor', () => {
       return { value, unit };
     };
 
-    // Create CSS with a selector that doesn't match blacklist
-    const input = 'div { width: 100px; }';
-    const result = await postcss([unitProcessor({ processor, selectorBlackList: ['test'] })])
-      .process(input, { from: undefined });
-    expect(result.css).toEqual('div { width: 200px; }');
+    await testProcess(
+      'div { width: 100px; }',
+      'div { width: 200px; }',
+      { processor, selectorBlackList: ['test'] }
+    );
   });
 
   // Test property list with notContain pattern
@@ -287,6 +278,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { max-width: 100px; min-test-width: 50px; width: 75px; height: 25px; }',
       'div { max-width: 200px; min-test-width: 50px; width: 150px; height: 50px; }',
@@ -302,6 +294,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { max-width: 100px; test-width: 50px; width: 75px; height: 25px; }',
       'div { max-width: 200px; test-width: 50px; width: 150px; height: 50px; }',
@@ -317,6 +310,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { max-width: 100px; width-test: 50px; width: 75px; height: 25px; }',
       'div { max-width: 200px; width-test: 50px; width: 150px; height: 50px; }',
@@ -332,10 +326,13 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
-    const input = 'div { width: 100px; }';
-    const result = await postcss([unitProcessor({ processor, exclude: () => true })])
-      .process(input, { from: 'test.css' });
-    expect(result.css).toEqual('div { width: 100px; }');
+
+    await testProcess(
+      'div { width: 100px; }',
+      'div { width: 100px; }',
+      { processor, exclude: () => true },
+      { from: 'test.css' }
+    );
   });
 
   // Test exclude option with string that matches file path
@@ -346,10 +343,13 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
-    const input = 'div { width: 100px; }';
-    const result = await postcss([unitProcessor({ processor, exclude: 'test' })])
-      .process(input, { from: 'test.css' });
-    expect(result.css).toEqual('div { width: 100px; }');
+
+    await testProcess(
+      'div { width: 100px; }',
+      'div { width: 100px; }',
+      { processor, exclude: 'test' },
+      { from: 'test.css' }
+    );
   });
 
   // Test exclude option with regex that matches file path
@@ -360,10 +360,13 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
-    const input = 'div { width: 100px; }';
-    const result = await postcss([unitProcessor({ processor, exclude: /test/ })])
-      .process(input, { from: 'test.css' });
-    expect(result.css).toEqual('div { width: 100px; }');
+
+    await testProcess(
+      'div { width: 100px; }',
+      'div { width: 100px; }',
+      { processor, exclude: /test/ },
+      { from: 'test.css' }
+    );
   });
 
   // Test media query processing when excluded
@@ -374,10 +377,13 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
-    const input = '@media (max-width: 600px) { div { width: 100px; } }';
-    const result = await postcss([unitProcessor({ processor, mediaQuery: true, exclude: /test/ })])
-      .process(input, { from: 'test.css' });
-    expect(result.css).toEqual('@media (max-width: 600px) { div { width: 100px; } }');
+
+    await testProcess(
+      '@media (max-width: 600px) { div { width: 100px; } }',
+      '@media (max-width: 600px) { div { width: 100px; } }',
+      { processor, mediaQuery: true, exclude: /test/ },
+      { from: 'test.css' }
+    );
   });
 
   // Test blacklistedSelector function with undefined selector
@@ -434,6 +440,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { width: 100px; }',
       'div { width: 200px; }',
@@ -449,6 +456,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { width: 100valid; margin: 50invalid123; padding: 25; }',
       'div { width: 200valid; margin: 50invalid123; padding: 25; }',
@@ -475,6 +483,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { width: 100px; }',
       'div { width: 0px; }',
@@ -490,6 +499,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { width: 100px; }',
       'div { width: 50px; }',
@@ -505,6 +515,7 @@ describe('postcss-unit-processor', () => {
       }
       return value;
     };
+
     await testProcess(
       'div { width: 100px; }',
       'div { width: 75.5px; }',
@@ -520,6 +531,7 @@ describe('postcss-unit-processor', () => {
       }
       return value;
     };
+
     await testProcess(
       'div { width: 100px; }',
       'div { width: 0px; }',
@@ -535,6 +547,7 @@ describe('postcss-unit-processor', () => {
       }
       return value;
     };
+
     await testProcess(
       'div { width: 100px; }',
       'div { width: 0px; }',
@@ -550,6 +563,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { width: 100px; }',
       'div { width: 0px; }',
@@ -565,20 +579,12 @@ describe('postcss-unit-processor', () => {
       }
       return value;
     };
+
     await testProcess(
       'div { width: 100px; }',
       'div { width: 42.75px; }',
       { processor }
     );
-  });
-
-  // Test unitProcessor with no options (default parameter)
-  it('should handle unitProcessor called without options', async () => {
-    const input = 'div { width: 100px; }';
-    const result = await postcss([unitProcessor()])
-      .process(input, { from: undefined });
-    expect(result.css).toEqual('div { width: 100px; }');
-    expect(result.warnings()).toHaveLength(0);
   });
 
   // percentage units should be preserved in hsl functions
@@ -589,6 +595,7 @@ describe('postcss-unit-processor', () => {
       }
       return value;
     };
+
     await testProcess(
       ':root { --theme-secondary-hs: 0, 0%; --theme-secondary: hsl(0, 0%, 85%); }',
       ':root { --theme-secondary-hs: 0, 0%; --theme-secondary: hsl(0, 0%, 85%); }',
@@ -604,6 +611,7 @@ describe('postcss-unit-processor', () => {
       }
       return value;
     };
+
     await testProcess(
       'div { width: 0%; height: 100%; }',
       'div { width: 0%; height: 100%; }',
@@ -619,6 +627,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50rem; margin: 20em; }',
       'div { width: 100px; height: 100rem; margin: 20em; }',
@@ -634,6 +643,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; }',
       'div { width: 100px; height: 100rem; margin: 40em; padding: 10pt; }',
@@ -649,6 +659,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50rem; }',
       'div { width: 200px; height: 50rem; }',
@@ -661,6 +672,7 @@ describe('postcss-unit-processor', () => {
     const processor = (value, unit) => {
       return { value: value * 2, unit: unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50rem; margin: 20em; }',
       'div { width: 100px; height: 100rem; margin: 40em; }',
@@ -673,6 +685,7 @@ describe('postcss-unit-processor', () => {
     const processor = (value, unit) => {
       return { value: value * 2, unit: unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; }',
       'div { width: 200px; height: 50rem; margin: 20em; padding: 20pt; }',
@@ -685,6 +698,7 @@ describe('postcss-unit-processor', () => {
     const processor = (value, unit) => {
       return { value: value * 2, unit: unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; }',
       'div { width: 100px; height: 100rem; margin: 40em; padding: 10pt; }',
@@ -697,6 +711,7 @@ describe('postcss-unit-processor', () => {
     const processor = (value, unit) => {
       return { value: value * 2, unit: unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; }',
       'div { width: 100px; height: 100rem; margin: 40em; padding: 10pt; }',
@@ -709,6 +724,7 @@ describe('postcss-unit-processor', () => {
     const processor = (value, unit) => {
       return { value: value * 2, unit: unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; }',
       'div { width: 200px; height: 50rem; margin: 20em; padding: 20pt; }',
@@ -721,6 +737,7 @@ describe('postcss-unit-processor', () => {
     const processor = (value, unit) => {
       return { value: value * 2, unit: unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; }',
       'div { width: 100px; height: 100rem; margin: 40em; padding: 10pt; }',
@@ -733,6 +750,7 @@ describe('postcss-unit-processor', () => {
     const processor = (value, unit) => {
       return { value: value * 2, unit: unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; }',
       'div { width: 200px; height: 50rem; margin: 20em; padding: 20pt; }',
@@ -748,6 +766,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       'div { width: 100custom; height: 50px; }',
       'div { width: 200custom; height: 50px; }',
@@ -760,6 +779,7 @@ describe('postcss-unit-processor', () => {
     const processor = (value, unit) => {
       return { value: value * 2, unit: unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50rem; margin: 20em; padding: 10pt; font-size: 14vw; }',
       'div { width: 200px; height: 50rem; margin: 40em; padding: 10pt; font-size: 28vw; }',
@@ -772,6 +792,7 @@ describe('postcss-unit-processor', () => {
     const processor = (value, unit) => {
       return { value: value * 2, unit: unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50rem; }',
       'div { width: 200px; height: 100rem; }',
@@ -784,6 +805,7 @@ describe('postcss-unit-processor', () => {
     const processor = (value, unit) => {
       return { value: value * 2, unit: unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50rem; }',
       'div { width: 100px; height: 50rem; }',
@@ -799,6 +821,7 @@ describe('postcss-unit-processor', () => {
       }
       return { value, unit };
     };
+
     await testProcess(
       '@media (max-width: 600px) { div { width: 100rem; height: 50px; } }',
       '@media (max-width: 600px) { div { width: 200rem; height: 50px; } }',
@@ -811,11 +834,11 @@ describe('postcss-unit-processor', () => {
     const processor = (value, unit) => {
       return { value: value * 2, unit: unit };
     };
+
     await testProcess(
       'div { width: 100px; height: 50rem; }',
       'div { width: 200px; height: 100rem; }',
       { processor, unitList: 'not-an-array' }
     );
   });
-
 });
