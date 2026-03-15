@@ -1,6 +1,6 @@
 {
   "name": "postcss-unit-processor",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "PostCSS plugin to process CSS unit values via a custom function. Convert px to rem, px to vw, or apply any unit transformation.",
   "main": "index.js",
   "types": "index.d.ts",
