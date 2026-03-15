@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.4.3
+
+### Changed
+- Updated README with comprehensive usage examples and API documentation
+
 ## 1.4.2
 
 ### Fixed
