@@ -1,7 +1,7 @@
 {
   "name": "postcss-unit-processor",
   "version": "1.4.2",
-  "description": "PostCSS plugin to process css unit.",
+  "description": "PostCSS plugin to process CSS unit values via a custom function. Convert px to rem, px to vw, or apply any unit transformation.",
   "main": "index.js",
   "types": "index.d.ts",
   "files": [
@@ -21,7 +21,15 @@
   "keywords": [
     "postcss",
     "postcss-plugin",
-    "unit"
+    "css",
+    "unit",
+    "unit-conversion",
+    "px",
+    "rem",
+    "vw",
+    "px-to-rem",
+    "px-to-vw",
+    "responsive"
   ],
   "author": "Hex",
   "license": "MIT",
@@ -33,9 +41,9 @@
     "postcss": "^8.0.0"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.28.0",
-    "babel-jest": "^30.0.4",
-    "jest": "^30.0.4",
-    "postcss": "^8.5.6"
+    "@babel/preset-env": "^7.29.0",
+    "babel-jest": "^30.3.0",
+    "jest": "^30.3.0",
+    "postcss": "^8.5.8"
   }
 }
